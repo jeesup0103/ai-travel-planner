@@ -1,0 +1,55 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AuthProvider } from './contexts/AuthContext';
+import theme from './theme';
+
+// Pages
+import Login from './pages/Login';
+import Home from './pages/Home';
+import Profile from './pages/Profile';
+import Chat from './pages/Chat';
+
+// Components
+import Layout from './components/Layout';
+import PrivateRoute from './components/PrivateRoute';
+
+const App: React.FC = () => {
+  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route element={<Layout />}>
+                <Route path="/" element={
+                  <PrivateRoute>
+                    <Home />
+                  </PrivateRoute>
+                } />
+                <Route path="/chat" element={
+                  <PrivateRoute>
+                    <Chat />
+                  </PrivateRoute>
+                } />
+                <Route path="/profile" element={
+                  <PrivateRoute>
+                    <Profile />
+                  </PrivateRoute>
+                } />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </GoogleOAuthProvider>
+  );
+};
+
+export default App;
