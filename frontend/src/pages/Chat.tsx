@@ -9,8 +9,19 @@ import {
   ListItem,
   ListItemText,
   CircularProgress,
+  Drawer,
+  ListItemButton,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
-import { Send as SendIcon } from '@mui/icons-material';
+import {
+  Send as SendIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 
 interface Message {
@@ -20,18 +31,98 @@ interface Message {
   timestamp: Date;
 }
 
+interface ChatSession {
+  id: string;
+  title: string;
+  timestamp: Date;
+  messages: Message[];
+}
+
 interface Location {
   lat: number;
   lng: number;
   name: string;
 }
 
+const drawerWidth = 300;
+
 const Chat: React.FC = () => {
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([
+    {
+      id: '1',
+      title: 'Trip to San Francisco',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '2',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '3',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '4',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '5',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '6',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '7',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '8',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '9',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '10',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+    {
+      id: '11',
+      title: 'Tokyo Adventure',
+      timestamp: new Date(),
+      messages: [],
+    },
+  ]);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
@@ -44,6 +135,34 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleDeleteClick = (chatId: string) => {
+    setChatToDelete(chatId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (chatToDelete) {
+      setChatSessions(prev => prev.filter(chat => chat.id !== chatToDelete));
+      if (selectedChat === chatToDelete) {
+        setSelectedChat(null);
+        setMessages([]);
+      }
+    }
+    setDeleteDialogOpen(false);
+    setChatToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setChatToDelete(null);
+  };
+
+  const handleChatSelect = (chatId: string) => {
+    setSelectedChat(chatId);
+    const chat = chatSessions.find(c => c.id === chatId);
+    setMessages(chat?.messages || []);
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -80,7 +199,6 @@ const Chat: React.FC = () => {
 
       setMessages((prev) => [...prev, aiMessage]);
 
-      // Update locations if provided in the response
       if (data.locations) {
         setLocations(data.locations);
       }
@@ -103,24 +221,64 @@ const Chat: React.FC = () => {
     : { lat: 37.5665, lng: 126.9780 }; // Default to Seoul
 
   return (
-    <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)', gap: 2 }}>
+    <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)' }}>
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            position: 'relative',
+            mt: 0,
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        <Typography variant="h6" sx={{ p: 2, bgcolor: 'background.paper' }}>
+          Chats
+        </Typography>
+        <Divider />
+        <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
+          <List>
+            {chatSessions.map((chat) => (
+              <ListItem
+                key={chat.id}
+                disablePadding
+                secondaryAction={
+                  <IconButton edge="end" onClick={() => handleDeleteClick(chat.id)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                }
+              >
+                <ListItemButton onClick={() => handleChatSelect(chat.id)} selected={selectedChat === chat.id}>
+                  <ListItemText
+                    primary={chat.title}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+
       <Paper
         sx={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          maxWidth: '50%',
-          p: 2,
+          mx: 2,
         }}
       >
-        <Typography variant="h6" gutterBottom>
-          Chat with AI Travel Planner
-        </Typography>
         <Box
           sx={{
             flex: 1,
             overflowY: 'auto',
-            mb: 2,
+            p: 2,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           <List>
@@ -150,7 +308,7 @@ const Chat: React.FC = () => {
             <div ref={messagesEndRef} />
           </List>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
           <TextField
             fullWidth
             multiline
@@ -158,7 +316,7 @@ const Chat: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about travel destinations..."
+            placeholder="Type your message..."
             disabled={loading}
           />
           <IconButton
@@ -190,6 +348,25 @@ const Chat: React.FC = () => {
           </GoogleMap>
         )}
       </Paper>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Delete Chat
+        </DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this chat?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

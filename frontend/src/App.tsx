@@ -25,13 +25,12 @@ const App: React.FC = () => {
         <AuthProvider>
           <Router>
             <Routes>
-              <Route path="/login" element={<Login />} />
               <Route element={<Layout />}>
-                <Route path="/" element={
-                  <PrivateRoute>
-                    <Home />
-                  </PrivateRoute>
-                } />
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+
+                {/* Protected Routes */}
                 <Route path="/chat" element={
                   <PrivateRoute>
                     <Chat />

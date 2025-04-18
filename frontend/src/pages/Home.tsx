@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Stack,
   Card,
   CardContent,
   CardActionArea,
   CardMedia,
+  Button,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -17,54 +17,86 @@ const Home: React.FC = () => {
 
   const features = [
     {
-      title: 'Start Chat',
-      description: 'Chat with our AI to get personalized travel recommendations',
+      title: 'AI-Powered Travel Planning',
+      description: 'Get personalized travel recommendations using advanced AI technology',
       image: '/images/chat.jpg',
-      path: '/chat',
+      requiresAuth: true,
+      action: () => navigate('/chat'),
     },
     {
-      title: 'Profile Settings',
-      description: 'Update your travel preferences and profile information',
-      image: '/images/profile.jpg',
-      path: '/profile',
+      title: 'Interactive Maps',
+      description: 'Visualize your travel destinations with integrated Google Maps',
+      image: '/images/maps.jpg',
+      requiresAuth: true,
+      action: () => navigate('/chat'),
+    },
+    {
+      title: 'Smart Recommendations',
+      description: 'Receive tailored suggestions based on your preferences and interests',
+      image: '/images/recommendations.jpg',
+      requiresAuth: true,
+      action: () => navigate('/profile'),
     },
   ];
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Welcome, {user?.name}!
-      </Typography>
-      <Typography variant="body1" color="text.secondary" component="p">
-        Ready to plan your next adventure? Start by chatting with our AI travel planner
-        or update your preferences to get personalized recommendations.
-      </Typography>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Typography variant="h3" gutterBottom>
+          Plan Your Next Adventure
+        </Typography>
+        <Typography variant="h6" color="text.secondary" paragraph>
+          Let AI help you create the perfect travel itinerary
+        </Typography>
+        {!user && (
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => navigate('/login')}
+            sx={{ mt: 2 }}
+          >
+            Get Started
+          </Button>
+        )}
+      </Box>
 
-      <Stack spacing={3} sx={{ mt: 3 }} direction={{ xs: 'column', sm: 'row' }}>
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          md: 'repeat(3, 1fr)'
+        },
+        gap: 3
+      }}>
         {features.map((feature) => (
-          <Box key={feature.title} sx={{ width: { xs: '100%', sm: '50%' } }}>
-            <Card>
-              <CardActionArea onClick={() => navigate(feature.path)}>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image={feature.image}
-                  alt={feature.title}
-                  sx={{ objectFit: 'cover' }}
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {feature.title}
+          <Card key={feature.title}>
+            <CardActionArea
+              onClick={feature.requiresAuth && !user ? () => navigate('/login') : feature.action}
+            >
+              <CardMedia
+                component="img"
+                height="140"
+                image={feature.image}
+                alt={feature.title}
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  {feature.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {feature.description}
+                </Typography>
+                {feature.requiresAuth && !user && (
+                  <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 1 }}>
+                    Login to access this feature
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {feature.description}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Box>
+                )}
+              </CardContent>
+            </CardActionArea>
+          </Card>
         ))}
-      </Stack>
+      </Box>
     </Box>
   );
 };
