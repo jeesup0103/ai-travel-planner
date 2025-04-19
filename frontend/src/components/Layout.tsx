@@ -34,26 +34,45 @@ const Layout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="fixed">
+      <AppBar position="fixed" elevation={0} sx={{borderBottom:"1px solid #efefef"}}>
         <Toolbar>
           <Typography
             variant="h6"
             component="div"
-            sx={{ flexGrow: 0, mr: 4, cursor: 'pointer' }}
+            sx={{
+              flexGrow: 0,
+              mr: 4,
+              cursor: 'pointer',
+              fontSize: '2rem',
+              fontWeight: 600,
+            }}
             onClick={() => navigate('/')}
           >
             Travel Planner
           </Typography>
-          <Box sx={{ flexGrow: 1, display: 'flex', gap: 2 }}>
-            <Button color="inherit" onClick={() => navigate('/')}>
+          <Box sx={{ display: 'flex', gap: 2, ml: 'auto', alignItems: 'center'}}>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/')}
+              sx={{
+                fontSize: '1.1rem',
+                fontWeight: 500
+              }}
+            >
               Home
             </Button>
             {user && (
-              <>
-                <Button color="inherit" onClick={() => navigate('/chat')}>
-                  Chat
-                </Button>
-              </>
+              <Button
+                color="inherit"
+                aria-label="account of current user"
+                onClick={() => navigate('/chat')}
+                sx={{
+                  fontSize: '1.1rem',
+                  fontWeight: 500
+                }}
+              >
+                Chat
+              </Button>
             )}
           </Box>
           {user ? (
