@@ -5,7 +5,6 @@ import {
   Typography,
   Card,
   CardContent,
-  CardActionArea,
   CardMedia,
   Button,
 } from '@mui/material';
@@ -17,36 +16,33 @@ const Home: React.FC = () => {
 
   const features = [
     {
-      title: 'AI-Powered Travel Planning',
+      title: 'AI-Powered Travel Recommendation',
       description: 'Get personalized travel recommendations using advanced AI technology',
       image: '/images/chat.jpg',
-      requiresAuth: true,
-      action: () => navigate('/chat'),
+      requiresAuth: false
     },
     {
       title: 'Interactive Maps',
       description: 'Visualize your travel destinations with integrated Google Maps',
       image: '/images/maps.jpg',
-      requiresAuth: true,
-      action: () => navigate('/chat'),
+      requiresAuth: false
     },
     {
-      title: 'Smart Recommendations',
-      description: 'Receive tailored suggestions based on your preferences and interests',
+      title: 'Chat-based interface',
+      description: 'Chat your way to personalized place suggestions',
       image: '/images/recommendations.jpg',
-      requiresAuth: true,
-      action: () => navigate('/profile'),
+      requiresAuth: false
     },
   ];
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ textAlign: 'center', mb: 6 }}>
+      <Box sx={{ textAlign: 'center', mb: 6, mt: 10}}>
         <Typography variant="h3" gutterBottom>
           Plan Your Next Adventure
         </Typography>
-        <Typography variant="h6" color="text.secondary" paragraph>
-          Let AI help you create the perfect travel itinerary
+        <Typography variant="h6" color="text.secondary">
+          Get Personalized travel spot recommendations powered by ChatGPT and Google Maps
         </Typography>
         {!user && (
           <Button
@@ -66,34 +62,28 @@ const Home: React.FC = () => {
           xs: '1fr',
           md: 'repeat(3, 1fr)'
         },
-        gap: 3
+        gap: 8,
+        mt:20,
+        ml:10,
+        mr:10
       }}>
         {features.map((feature) => (
-          <Card key={feature.title}>
-            <CardActionArea
-              onClick={feature.requiresAuth && !user ? () => navigate('/login') : feature.action}
-            >
-              <CardMedia
-                component="img"
-                height="140"
-                image={feature.image}
-                alt={feature.title}
-                sx={{ objectFit: 'cover' }}
-              />
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                  {feature.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {feature.description}
-                </Typography>
-                {feature.requiresAuth && !user && (
-                  <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 1 }}>
-                    Login to access this feature
-                  </Typography>
-                )}
-              </CardContent>
-            </CardActionArea>
+          <Card key={feature.title} sx={{ borderRadius: 10, overflow: 'hidden' }}>
+            <CardMedia
+              component="img"
+              height="180"
+              image={feature.image}
+              alt={feature.title}
+              sx={{ objectFit: 'cover' }}
+            />
+            <CardContent>
+              <Typography gutterBottom variant="h5" component="div">
+                {feature.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {feature.description}
+              </Typography>
+            </CardContent>
           </Card>
         ))}
       </Box>
