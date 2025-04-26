@@ -34,23 +34,3 @@ ai-travel-planner/
 ├── docs/             # 프로젝트 문서
 └── README.md         # 프로젝트 설명
 ```
-
-## 시작하기
-1. 저장소 클론
-```bash
-git clone https://github.com/jeesup0103/ai-travel-planner.git
-```
-
-2. 환경 설정
-- Frontend: Node.js 18+ 필요
-- Backend: Java 17+, Maven 필요
-- AI Service: Python 3.9+ 필요
-- Database: PostgreSQL 필요
-
-3. API 키 설정
-- Google Maps API 키
-- OpenAI API 키
-- Google OAuth2 클라이언트 ID
-
-## 개발 가이드
-자세한 개발 가이드는 `docs/` 디렉토리를 참조하세요.
