@@ -295,27 +295,38 @@ const Chat: React.FC = () => {
                     p: 2,
                     maxWidth: '80%',
                     bgcolor: message.sender === 'user' ? 'primary.light' : 'grey.100',
-                    color: message.sender === 'user' ? 'white' : 'text.primary',
+                    color: message.sender === 'user' ? 'black' : 'text.primary',
+                    wordBreak: 'break-word',
                   }}
                 >
-                  <ListItemText
-                    primary={message.text}
-                    secondary={message.timestamp.toLocaleTimeString()}
-                  />
+                  <Typography variant="body1">{message.text}</Typography>
+
                 </Paper>
+                <Typography variant="caption" sx={{ display: 'block', mt: 1, textAlign: 'right' }}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Typography>
               </ListItem>
             ))}
             <div ref={messagesEndRef} />
           </List>
         </Box>
-        <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            gap: 1,
+            borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+            backgroundColor: 'background.paper',
+            position: 'sticky',
+            bottom: 0,
+          }}
+        >
           <TextField
             fullWidth
             multiline
             maxRows={4}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={loading}
           />
