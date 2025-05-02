@@ -327,6 +327,7 @@ const Chat: React.FC = () => {
             maxRows={4}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyPress}
             placeholder="Type your message..."
             disabled={loading}
           />
