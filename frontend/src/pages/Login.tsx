@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Box, Typography, Paper } from '@mui/material';
+import { Container, Box, Typography, Paper, Alert } from '@mui/material';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
@@ -8,15 +8,17 @@ import { authService } from '../services/authService';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
-      const token = await authService.login(credentialResponse.credential);
-      await login(token);
+      setError(null);
+      const response = await authService.login(credentialResponse.credential);
+      await login(response.token, response.user);
       navigate('/', { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
-      // You might want to show an error message to the user
+      setError('Login failed. Please try again.');
     }
   };
 
@@ -46,13 +48,16 @@ const Login: React.FC = () => {
           <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 3 }}>
             Sign in to start planning your next adventure
           </Typography>
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
             <GoogleLogin
-              onSuccess={credentialResponse => {
-                console.log(credentialResponse);
-              }}
+              onSuccess={handleGoogleSuccess}
               onError={() => {
-                console.log('Login Failed');
+                setError('Google login failed. Please try again.');
               }}
             />
           </Box>

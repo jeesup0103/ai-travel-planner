@@ -1,39 +1,56 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/user';
+import { authService } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string) => Promise<void>;
+  login: (token: string, userData: User) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for development
-const mockUser: User = {
-  id: '1',
-  email: 'dev@example.com',
-  name: 'Developer',
-  picture: 'https://via.placeholder.com/150',
-  preferences: {
-    travelPreferences: ['Beaches', 'Mountains', 'Cities']
-  }
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(mockUser); // Always return mock user
-  const [loading, setLoading] = useState(false); // No loading state needed
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (token: string) => {
-    // No-op for development
-    console.log('Login called with token:', token);
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  const login = async (token: string, userData: User) => {
+    try {
+      localStorage.setItem('token', token);
+      // Set up axios interceptor for future requests
+      authService.setupAxiosInterceptors();
+      setUser(userData);
+    } catch (error) {
+      console.error('Login failed:', error);
+      localStorage.removeItem('token');
+      throw error;
+    }
   };
 
   const logout = () => {
-    // No-op for development
-    console.log('Logout called');
+    localStorage.removeItem('token');
+    setUser(null);
   };
 
   const updateUser = (updatedUser: User) => {

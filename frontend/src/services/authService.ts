@@ -3,10 +3,33 @@ import { User } from '../types/user';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
+// Configure axios defaults
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+interface LoginResponse {
+  token: string;
+  user: User;
+}
+
 class AuthService {
-  async login(googleToken: string): Promise<string> {
-    const response = await axios.post(`${API_URL}/auth/google`, { token: googleToken });
-    return response.data.token;
+  async login(googleToken: string): Promise<LoginResponse> {
+    try {
+      console.log('Attempting login with token:', googleToken.substring(0, 10) + '...');
+      console.log('API URL:', API_URL);
+
+      const response = await axios.post(`${API_URL}/auth/google`, { token: googleToken });
+      console.log('Login response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Login error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      throw error;
+    }
   }
 
   async getCurrentUser(): Promise<User> {

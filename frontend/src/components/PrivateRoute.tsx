@@ -10,11 +10,6 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 
-  // During development, always render children
-  if (process.env.NODE_ENV === 'development') {
-    return <>{children}</>;
-  }
-
   if (loading) {
     return (
       <Box
