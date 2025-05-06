@@ -59,61 +59,7 @@ const Chat: React.FC = () => {
       title: 'Tokyo Adventure',
       timestamp: new Date(),
       messages: [],
-    },
-    {
-      id: '3',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '4',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '5',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '6',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '7',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '8',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '9',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '10',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '11',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    },
+    }
   ]);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);

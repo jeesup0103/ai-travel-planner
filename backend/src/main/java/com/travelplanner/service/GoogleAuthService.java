@@ -21,8 +21,8 @@ public class GoogleAuthService {
     private final UserRepository userRepository;
 
     public GoogleAuthService(
-            @Value("${app.google.clientId}") String clientId,
-            UserRepository userRepository) {
+        @Value("${app.google.clientId}") String clientId,
+        UserRepository userRepository) {
         this.userRepository = userRepository;
         this.verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                 .setAudience(Collections.singletonList(clientId))
