@@ -1,7 +1,5 @@
 package com.travelplanner.model;
 
-import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,26 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Data
-@Entity
 @Setter
-@Table(name = "users")
+@Data
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true)
     private String email;
-
     private String name;
     private String picture;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Role role;
+    private List<String> travelPreferences = new ArrayList<>();
 
-    protected User() {}
+    public User() {}
 
     public User(String email, String name, String picture, Role role) {
         this.email = email;
@@ -37,10 +26,4 @@ public class User {
         this.picture = picture;
         this.role = role;
     }
-
-    @ElementCollection
-    @CollectionTable(name = "user_travel_preferences", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "preference")
-    private List<String> travelPreferences = new ArrayList<>();
-
 }

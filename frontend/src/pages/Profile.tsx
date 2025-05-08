@@ -90,7 +90,7 @@ const Profile: React.FC = () => {
               value={newPreference}
               onChange={(e) => setNewPreference(e.target.value)}
               placeholder="Add travel preference (e.g., 'Museums', 'Nature')"
-              onKeyPress={(e) => {
+              onKeyUp={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   handleAddPreference();
