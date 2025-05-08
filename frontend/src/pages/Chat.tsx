@@ -23,26 +23,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
-
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
-
-interface ChatSession {
-  id: string;
-  title: string;
-  timestamp: Date;
-  messages: Message[];
-}
-
-interface Location {
-  lat: number;
-  lng: number;
-  name: string;
-}
+import { ChatSession, Message, Location } from '../types/chat';
 
 const drawerWidth = 300;
 
