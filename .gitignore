@@ -19,6 +19,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Maven
+backend/target/
+
 # IDE
 .idea/
 .vscode/
