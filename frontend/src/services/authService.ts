@@ -20,6 +20,14 @@ class AuthService {
 
       const response = await axios.post(`${API_URL}/auth/google`, { token: googleToken });
       console.log('Login response:', response.data);
+
+      if (!response.data.token) {
+        throw new Error('No token received from server');
+      }
+
+      // Store the token immediately after receiving it
+      localStorage.setItem('token', response.data.token);
+
       return response.data;
     } catch (error: any) {
       console.error('Login error details:', {
@@ -33,15 +41,39 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/users/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Getting current user with token:', token ? 'present' : 'missing');
+
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await axios.get(`${API_URL}/users/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Current user response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Get current user error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
   }
 
   async updateUserProfile(userData: Partial<User>): Promise<User> {
     const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+
     const response = await axios.patch(`${API_URL}/users/me`, userData, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -50,25 +82,24 @@ class AuthService {
 
   // Setup axios interceptor for handling token
   setupAxiosInterceptors() {
-    axios.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
+    axios.interceptors.request.use((config) => {
+      if (config.url?.endsWith("/auth/google")) {
         return config;
-      },
-      (error) => {
-        return Promise.reject(error);
       }
-    );
-
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers!['Authorization'] = `Bearer ${token}`;
+        console.log('Added token to request headers');
+      }
+      return config;
+    });
     axios.interceptors.response.use(
-      (response) => response,
-      async (error) => {
+      (res) => res,
+      (error) => {
         if (error.response?.status === 401) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          console.log("How is this run???");
+          // window.location.href = '/login';
         }
         return Promise.reject(error);
       }

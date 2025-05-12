@@ -1,5 +1,6 @@
 export interface Message {
     id: string;
+    chatSessionId: number;
     text: string;
     sender: 'user' | 'ai';
     timestamp: Date;

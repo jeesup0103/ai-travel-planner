@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Paper,
@@ -7,10 +10,10 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemText,
   CircularProgress,
   Drawer,
   ListItemButton,
+  ListItemText,
   Divider,
   Dialog,
   DialogTitle,
@@ -18,59 +21,102 @@ import {
   DialogActions,
   Button,
 } from '@mui/material';
-import {
-  Send as SendIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material';
+import { Send as SendIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import { ChatSession, Message, Location } from '../types/chat';
 
 const drawerWidth = 300;
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const Chat: React.FC = () => {
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([
-    {
-      id: '1',
-      title: 'Trip to San Francisco',
-      timestamp: new Date(),
-      messages: [],
-    },
-    {
-      id: '2',
-      title: 'Tokyo Adventure',
-      timestamp: new Date(),
-      messages: [],
-    }
-  ]);
+  const navigate = useNavigate();
+  const { user, loading:authLoading, logout } = useAuth();
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const [locations] = useState<Location[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Load chat sessions on mount
   useEffect(() => {
-    scrollToBottom();
+    if (authLoading) return;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    axios.get<ChatSession[]>(`${API_URL}/chats`)
+      .then(res => setChatSessions(
+        res.data.map(s => ({
+          ...s,
+          id: String(s.id),
+          timestamp: new Date(s.timestamp)
+        }))
+      ))
+      .catch(error => {
+        console.error('Failed to load chats:', error);
+        if (error.response?.status === 401) {
+          logout();
+          navigate('/login');
+        }
+      });
+  }, [authLoading, user, navigate, logout]);
+
+  // Scroll-to-bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Select a chat and fetch its messages
+  const handleChatSelect = (chatId: string) => {
+    setSelectedChat(chatId);
+    axios.get<Message[]>(`${API_URL}/chats/${chatId}`)
+      .then(res => setMessages(
+        res.data.map(m => ({
+          ...m,
+          id: String(m.id),
+          timestamp: new Date(m.timestamp)
+        }))
+      ))
+      .catch(console.error);
+  };
+
+  // Create new chat session
+  const handleNewChat = async () => {
+    const title = prompt('Enter title for new chat:');
+    if (!title?.trim()) return;
+    try {
+      const res = await axios.post<ChatSession>(`${API_URL}/chats`, { title });
+      const session = {
+        ...res.data,
+        id: String(res.data.id),
+        timestamp: new Date(res.data.timestamp)
+      };
+      setChatSessions([session, ...chatSessions]);
+      setSelectedChat(session.id);
+      setMessages([]);
+    } catch (err) {
+      console.error('Failed to create chat', err);
+    }
+  };
+
+  // Delete chat session
   const handleDeleteClick = (chatId: string) => {
     setChatToDelete(chatId);
     setDeleteDialogOpen(true);
   };
-
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (chatToDelete) {
-      setChatSessions(prev => prev.filter(chat => chat.id !== chatToDelete));
+      await axios.delete(`${API_URL}/chats/${chatToDelete}`);
+      setChatSessions(cs => cs.filter(c => c.id !== chatToDelete));
       if (selectedChat === chatToDelete) {
         setSelectedChat(null);
         setMessages([]);
@@ -79,73 +125,57 @@ const Chat: React.FC = () => {
     setDeleteDialogOpen(false);
     setChatToDelete(null);
   };
-
   const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setChatToDelete(null);
   };
 
-  const handleChatSelect = (chatId: string) => {
-    setSelectedChat(chatId);
-    const chat = chatSessions.find(c => c.id === chatId);
-    setMessages(chat?.messages || []);
-  };
-
+  // Send message and get AI reply
   const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
+    if (!input.trim() || !selectedChat) return;
+    const text = input.trim();
+    const userMsg: Message = {
       id: Date.now().toString(),
-      text: input,
+      chatSessionId: Number(selectedChat),
+      text,
       sender: 'user',
       timestamp: new Date(),
     };
-
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(ms => [...ms, userMsg]);
     setInput('');
     setLoading(true);
 
     try {
-      // Call your AI service endpoint here
-      const response = await fetch('http://localhost:8000/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: input }),
+      const res = await axios.post<{ response: string }>(`${API_URL}/chat/message`, {
+        chatSessionId: Number(selectedChat),
+        text,
       });
-
-      const data = await response.json();
-
-      const aiMessage: Message = {
+      const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.response,
+        chatSessionId: Number(selectedChat),
+        text: res.data.response,
         sender: 'ai',
         timestamp: new Date(),
       };
-
-      setMessages((prev) => [...prev, aiMessage]);
-
-      if (data.locations) {
-        setLocations(data.locations);
-      }
-    } catch (error) {
-      console.error('Failed to get AI response:', error);
+      setMessages(ms => [...ms, aiMsg]);
+      // if backend ever returns locations:
+      // setLocations(res.data.locations || []);
+    } catch (err) {
+      console.error('AI request failed', err);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSend();
     }
   };
 
-  const mapCenter = locations.length > 0
+  const mapCenter = locations.length
     ? locations[0]
-    : { lat: 37.5665, lng: 126.9780 }; // Default to Seoul
+    : { lat: 37.5665, lng: 126.9780 };
 
   return (
     <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)' }}>
@@ -153,157 +183,94 @@ const Chat: React.FC = () => {
         variant="permanent"
         sx={{
           width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            position: 'relative',
-            mt: 0,
-            display: 'flex',
-            flexDirection: 'column',
-          },
+          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
         }}
       >
-        <Typography variant="h6" sx={{ p: 2, bgcolor: 'background.paper' }}>
-          Chats
-        </Typography>
-        <Divider />
-        <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
-          <List>
-            {chatSessions.map((chat) => (
-              <ListItem
-                key={chat.id}
-                disablePadding
-                secondaryAction={
-                  <IconButton edge="end" onClick={() => handleDeleteClick(chat.id)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                }
-              >
-                <ListItemButton onClick={() => handleChatSelect(chat.id)} selected={selectedChat === chat.id}>
-                  <ListItemText
-                    primary={chat.title}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Chats</Typography>
+          <IconButton onClick={handleNewChat}><AddIcon/></IconButton>
         </Box>
+        <Divider/>
+        <List sx={{ overflow: 'auto', flexGrow: 1 }}>
+          {chatSessions.map(chat => (
+            <ListItemButton
+              key={chat.id}
+              selected={chat.id === selectedChat}
+              onClick={() => handleChatSelect(chat.id)}
+              sx={{ display: 'flex', justifyContent: 'space-between' }}
+            >
+              <ListItemText primary={chat.title}/>
+              <IconButton edge="end" onClick={() => handleDeleteClick(chat.id)}>
+                <DeleteIcon fontSize="small"/>
+              </IconButton>
+            </ListItemButton>
+          ))}
+        </List>
       </Drawer>
 
-      <Paper
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          mx: 2,
-        }}
-      >
-        <Box
-          sx={{
-            flex: 1,
-            overflowY: 'auto',
-            p: 2,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
+      <Paper sx={{ flex: 1, mx: 2, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
           <List>
-            {messages.map((message) => (
+            {messages.map(msg => (
               <ListItem
-                key={message.id}
+                key={msg.id}
                 sx={{
                   flexDirection: 'column',
-                  alignItems: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                  alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start',
                 }}
               >
                 <Paper
                   sx={{
                     p: 2,
                     maxWidth: '80%',
-                    bgcolor: message.sender === 'user' ? 'primary.light' : 'grey.100',
-                    color: message.sender === 'user' ? 'black' : 'text.primary',
+                    bgcolor: msg.sender === 'user' ? 'primary.light' : 'grey.100',
                     wordBreak: 'break-word',
                   }}
                 >
-                  <Typography variant="body1">{message.text}</Typography>
-
+                  <Typography>{msg.text}</Typography>
                 </Paper>
-                <Typography variant="caption" sx={{ display: 'block', mt: 1, textAlign: 'right' }}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Typography>
+                <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
+                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Typography>
               </ListItem>
             ))}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef}/>
           </List>
         </Box>
-        <Box
-          sx={{
-            p: 2,
-            display: 'flex',
-            gap: 1,
-            borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-            backgroundColor: 'background.paper',
-            position: 'sticky',
-            bottom: 0,
-          }}
-        >
+        <Box sx={{ p: 2, display: 'flex', gap: 1, borderTop: 1, borderColor: 'divider' }}>
           <TextField
             fullWidth
             multiline
             maxRows={4}
+            placeholder="Type your message…"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
-            disabled={loading}
+            disabled={!selectedChat || loading}
           />
-          <IconButton
-            color="primary"
-            onClick={handleSend}
-            disabled={loading || !input.trim()}
-          >
-            {loading ? <CircularProgress size={24} /> : <SendIcon />}
+          <IconButton onClick={handleSend} disabled={loading || !input.trim()}>
+            {loading ? <CircularProgress size={24}/> : <SendIcon/>}
           </IconButton>
         </Box>
       </Paper>
 
       <Paper sx={{ flex: 1 }}>
-        {!isLoaded ? (
-          <CircularProgress />
-        ) : (
-          <GoogleMap
-            mapContainerStyle={{ width: '100%', height: '100%' }}
-            center={mapCenter}
-            zoom={13}
-          >
-            {locations.map((location) => (
-              <Marker
-                key={`${location.lat}-${location.lng}`}
-                position={{ lat: location.lat, lng: location.lng }}
-                title={location.name}
-              />
-            ))}
-          </GoogleMap>
-        )}
+        {!isLoaded
+          ? <CircularProgress/>
+          : <GoogleMap mapContainerStyle={{ width: '100%', height: '100%' }} center={mapCenter} zoom={13}>
+              {locations.map((loc, i) => (
+                <Marker key={i} position={loc} title={loc.name}/>
+              ))}
+            </GoogleMap>
+        }
       </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Delete Chat
-        </DialogTitle>
-        <DialogContent>
-          Are you sure you want to delete this chat?
-        </DialogContent>
+      <Dialog open={deleteDialogOpen} onClose={handleCancelDelete}>
+        <DialogTitle>Delete Chat</DialogTitle>
+        <DialogContent>Are you sure?</DialogContent>
         <DialogActions>
           <Button onClick={handleCancelDelete}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
-            Delete
-          </Button>
+          <Button onClick={handleConfirmDelete} color="error">Delete</Button>
         </DialogActions>
       </Dialog>
     </Box>

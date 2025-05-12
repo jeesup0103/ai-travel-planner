@@ -38,8 +38,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (token: string, userData: User) => {
     try {
       localStorage.setItem('token', token);
-      // Set up axios interceptor for future requests
-      authService.setupAxiosInterceptors();
       setUser(userData);
     } catch (error) {
       console.error('Login failed:', error);

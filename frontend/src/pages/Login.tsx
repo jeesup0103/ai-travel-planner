@@ -13,12 +13,20 @@ const Login: React.FC = () => {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setError(null);
+      console.log('Google credential received:', credentialResponse.credential.substring(0, 10) + '...');
+
       const response = await authService.login(credentialResponse.credential);
+
+      if (!response.token) {
+        throw new Error('No token received from server');
+      }
+
       await login(response.token, response.user);
+      console.log('Login successful, navigating to home');
       navigate('/', { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
-      setError('Login failed. Please try again.');
+      setError(error.response?.data?.message || 'Login failed. Please try again.');
     }
   };
 
