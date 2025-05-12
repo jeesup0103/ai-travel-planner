@@ -6,10 +6,13 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
@@ -26,12 +29,17 @@ public class JwtAuthenticationFilter implements Filter {
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 Long userId = tokenProvider.getUserIdFromJWT(jwt);
-                userRepository.findById(userId).ifPresent(user -> request.setAttribute("user", user));
-
-            }
+                userRepository.findById(userId).ifPresent(user -> {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                });
+                } else {
+                    ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                    return;
+                }
         } catch (Exception ex) {
-            // Log error but continue with the request
-            ex.printStackTrace();
+            ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error processing token");
+            return;
         }
 
         filterChain.doFilter(request, response);

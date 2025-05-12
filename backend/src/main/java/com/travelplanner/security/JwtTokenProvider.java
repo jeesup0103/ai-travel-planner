@@ -1,5 +1,6 @@
 package com.travelplanner.security;
 
+import com.travelplanner.controller.ChatController;
 import com.travelplanner.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -76,8 +77,6 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token);
             return true;
-        } catch (Exception ex) {
-            return false;
-        }
+        } catch (Exception ex) {return  false;}
     }
 }
