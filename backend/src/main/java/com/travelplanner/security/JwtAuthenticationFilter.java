@@ -24,6 +24,12 @@ public class JwtAuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
+        HttpServletRequest  req  = (HttpServletRequest) request;
+        String path = req.getServletPath();
+        if (path.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         try {
             String jwt = getJwtFromRequest((HttpServletRequest) request);
 
