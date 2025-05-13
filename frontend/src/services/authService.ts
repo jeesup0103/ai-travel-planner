@@ -19,14 +19,10 @@ class AuthService {
       console.log('API URL:', API_URL);
 
       const response = await axios.post(`${API_URL}/auth/google`, { token: googleToken });
-      console.log('Login response:', response.data);
 
       if (!response.data.token) {
         throw new Error('No token received from server');
       }
-
-      // Store the token immediately after receiving it
-      localStorage.setItem('token', response.data.token);
 
       return response.data;
     } catch (error: any) {
