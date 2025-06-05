@@ -21,10 +21,14 @@ public class ChatController {
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
 
+    private ResponseEntity<String> unauthorized() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+    }
+
     @GetMapping("/chats")
     public ResponseEntity<?> getChatSessions(@AuthenticationPrincipal User user) {
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return unauthorized();
         }
         List<ChatSession> sessions = chatRepository.findByUserId(user.getId());
         return ResponseEntity.ok(sessions);
@@ -33,7 +37,7 @@ public class ChatController {
     @PostMapping("/chats")
     public ResponseEntity<?> createChat(@RequestBody ChatSession body, @AuthenticationPrincipal User user) {
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return unauthorized();
         }
         try {
             ChatSession session = chatRepository.create(user.getId(), body.getTitle());
@@ -47,7 +51,7 @@ public class ChatController {
     @GetMapping("/chats/{id}")
     public ResponseEntity<?> getMessages(@PathVariable Long id, @AuthenticationPrincipal User user) {
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return unauthorized();
         }
         ChatSession session = chatRepository.findById(id).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
@@ -61,7 +65,7 @@ public class ChatController {
     @DeleteMapping("/chats/{id}")
     public ResponseEntity<?> deleteChat(@PathVariable Long id, @AuthenticationPrincipal User user) {
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return unauthorized();
         }
         ChatSession session = chatRepository.findById(id).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
@@ -76,7 +80,7 @@ public class ChatController {
     @PostMapping("/chat/message")
     public ResponseEntity<?> sendMessage(@RequestBody Message body, @AuthenticationPrincipal User user) {
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return unauthorized();
         }
         ChatSession session = chatRepository.findById(body.getChatSessionId()).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
