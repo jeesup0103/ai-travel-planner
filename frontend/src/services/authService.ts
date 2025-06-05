@@ -94,7 +94,6 @@ class AuthService {
       (error) => {
         if (error.response?.status === 401) {
           localStorage.removeItem('token');
-          console.log("How is this run???");
           // window.location.href = '/login';
         }
         return Promise.reject(error);
