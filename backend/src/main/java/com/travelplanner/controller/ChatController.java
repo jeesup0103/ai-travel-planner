@@ -32,6 +32,9 @@ public class ChatController {
 
     @PostMapping("/chats")
     public ResponseEntity<?> createChat(@RequestBody ChatSession body, @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
         try {
             ChatSession session = chatRepository.create(user.getId(), body.getTitle());
             return ResponseEntity.ok(session);
@@ -43,6 +46,9 @@ public class ChatController {
 
     @GetMapping("/chats/{id}")
     public ResponseEntity<?> getMessages(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
         ChatSession session = chatRepository.findById(id).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied.");
@@ -54,7 +60,9 @@ public class ChatController {
 
     @DeleteMapping("/chats/{id}")
     public ResponseEntity<?> deleteChat(@PathVariable Long id, @AuthenticationPrincipal User user) {
-
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
         ChatSession session = chatRepository.findById(id).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied.");
@@ -67,7 +75,9 @@ public class ChatController {
 
     @PostMapping("/chat/message")
     public ResponseEntity<?> sendMessage(@RequestBody Message body, @AuthenticationPrincipal User user) {
-
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
         ChatSession session = chatRepository.findById(body.getChatSessionId()).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied.");
