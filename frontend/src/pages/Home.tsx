@@ -37,11 +37,11 @@ const Home: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ textAlign: 'center', mb: 6, mt: 10}}>
-        <Typography variant="h3" gutterBottom>
+      <Box sx={{ textAlign: 'center', mb: 6, mt: 20}}>
+        <Typography variant="h3" gutterBottom marginBottom={10}>
           Plan Your Next Adventure
         </Typography>
-        <Typography variant="h6" color="text.secondary">
+        <Typography variant="h6" color="text.secondary" marginBottom={6}>
           Get Personalized travel spot recommendations powered by ChatGPT and Google Maps
         </Typography>
         {!user && (
@@ -49,7 +49,7 @@ const Home: React.FC = () => {
             variant="contained"
             size="large"
             onClick={() => navigate('/login')}
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, mb: 15 }}
           >
             Get Started
           </Button>
@@ -65,7 +65,8 @@ const Home: React.FC = () => {
         gap: 8,
         mt:20,
         ml:10,
-        mr:10
+        mr:10,
+        mb:20
       }}>
         {features.map((feature) => (
           <Card key={feature.title} sx={{ borderRadius: 10, overflow: 'hidden' }}>
