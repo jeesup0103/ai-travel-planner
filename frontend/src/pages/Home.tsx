@@ -44,16 +44,20 @@ const Home: React.FC = () => {
         <Typography variant="h6" color="text.secondary" marginBottom={6}>
           Get Personalized travel spot recommendations powered by ChatGPT and Google Maps
         </Typography>
-        {!user && (
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => navigate('/login')}
-            sx={{ mt: 2, mb: 15 }}
-          >
-            Get Started
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          size="large"
+          onClick={() => {
+            if (user) {
+              navigate('/chat');
+            } else {
+              navigate('/login');
+            }
+          }}
+          sx={{ mt: 2, mb: 15 }}
+        >
+          Get Started
+        </Button>
       </Box>
 
       <Box sx={{

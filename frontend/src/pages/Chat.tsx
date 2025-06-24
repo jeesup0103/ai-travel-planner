@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
@@ -32,7 +33,6 @@ const Chat: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading:authLoading, logout } = useAuth();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,6 +44,8 @@ const Chat: React.FC = () => {
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
   });
+
+  const { chatId } = useParams<{ chatId: string }>();
 
   // Load chat sessions on mount
   useEffect(() => {
@@ -70,6 +72,39 @@ const Chat: React.FC = () => {
       });
   }, [authLoading, user, navigate, logout]);
 
+  // Redirect invalid chatId
+  useEffect(() => {
+    const chatExists = chatSessions.some(session => session.id === chatId);
+    if (!chatExists) {
+      if (chatSessions.length > 0) {
+        navigate(`/chat/${chatSessions[0].id}`);
+      } else {
+        navigate(`/chat`);
+      }
+    }
+  }, [chatId, chatSessions, navigate]);
+
+  // Load messages when chatId in URL changes
+  useEffect(() => {
+    if (!chatId) {
+      setMessages([]);
+      return;
+    }
+
+    axios.get<Message[]>(`${API_URL}/chats/${chatId}`)
+      .then(res =>
+        setMessages(res.data.map(m => ({
+          ...m,
+          id: String(m.id),
+          timestamp: new Date(m.timestamp),
+        })))
+      )
+      .catch(err => {
+        console.error('Failed to load messages:', err);
+        setMessages([]);
+      });
+  }, [chatId]);
+
   // Scroll-to-bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -77,16 +112,7 @@ const Chat: React.FC = () => {
 
   // Select a chat and fetch its messages
   const handleChatSelect = (chatId: string) => {
-    setSelectedChat(chatId);
-    axios.get<Message[]>(`${API_URL}/chats/${chatId}`)
-      .then(res => setMessages(
-        res.data.map(m => ({
-          ...m,
-          id: String(m.id),
-          timestamp: new Date(m.timestamp)
-        }))
-      ))
-      .catch(console.error);
+    navigate(`/chat/${chatId}`);
   };
 
   // Create new chat session
@@ -101,7 +127,7 @@ const Chat: React.FC = () => {
         timestamp: new Date(res.data.timestamp)
       };
       setChatSessions([session, ...chatSessions]);
-      setSelectedChat(session.id);
+      navigate(`/chat/${session.id}`);
       setMessages([]);
     } catch (err) {
       console.error('Failed to create chat', err);
@@ -117,8 +143,8 @@ const Chat: React.FC = () => {
     if (chatToDelete) {
       await axios.delete(`${API_URL}/chats/${chatToDelete}`);
       setChatSessions(cs => cs.filter(c => c.id !== chatToDelete));
-      if (selectedChat === chatToDelete) {
-        setSelectedChat(null);
+      if (chatId === chatToDelete) {
+        navigate(`/chat`);
         setMessages([]);
       }
     }
@@ -132,11 +158,11 @@ const Chat: React.FC = () => {
 
   // Send message and get AI reply
   const handleSend = async () => {
-    if (!input.trim() || !selectedChat) return;
+    if (!input.trim() || !chatId) return;
     const text = input.trim();
     const userMsg: Message = {
       id: Date.now().toString(),
-      chatSessionId: Number(selectedChat),
+      chatSessionId: Number(chatId),
       text,
       sender: 'user',
       timestamp: new Date(),
@@ -147,12 +173,12 @@ const Chat: React.FC = () => {
 
     try {
       const res = await axios.post<{ response: string }>(`${API_URL}/chat/message`, {
-        chatSessionId: Number(selectedChat),
+        chatSessionId: Number(chatId),
         text,
       });
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        chatSessionId: Number(selectedChat),
+        chatSessionId: Number(chatId),
         text: res.data.response,
         sender: 'ai',
         timestamp: new Date(),
@@ -195,9 +221,15 @@ const Chat: React.FC = () => {
           {chatSessions.map(chat => (
             <ListItemButton
               key={chat.id}
-              selected={chat.id === selectedChat}
+              selected={chat.id === chatId}
               onClick={() => handleChatSelect(chat.id)}
-              sx={{ display: 'flex', justifyContent: 'space-between' }}
+              sx={{ display: 'flex',
+               justifyContent: 'space-between',
+               bgcolor: chat.id === chatId ? 'grey.300' : 'transparent',
+               '&:hover': {
+                 bgcolor: chat.id === chatId ? 'grey.400' : 'grey.200',
+               },
+              }}
             >
               <ListItemText primary={chat.title}/>
               <IconButton edge="end" onClick={() => handleDeleteClick(chat.id)}>
@@ -246,7 +278,7 @@ const Chat: React.FC = () => {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            disabled={!selectedChat || loading}
+            disabled={!chatId || loading}
           />
           <IconButton onClick={handleSend} disabled={loading || !input.trim()}>
             {loading ? <CircularProgress size={24}/> : <SendIcon/>}

@@ -31,11 +31,14 @@ const App: React.FC = () => {
                 <Route path="/login" element={<Login />} />
 
                 {/* Protected Routes */}
-                <Route path="/chat" element={
-                  <PrivateRoute>
-                    <Chat />
-                  </PrivateRoute>
-                } />
+                <Route
+                  path="/chat/:chatId?"
+                  element={
+                    <PrivateRoute>
+                      <Chat />
+                    </PrivateRoute>
+                  }
+                />
                 <Route path="/profile" element={
                   <PrivateRoute>
                     <Profile />
