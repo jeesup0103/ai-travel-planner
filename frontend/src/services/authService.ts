@@ -64,7 +64,7 @@ class AuthService {
     }
   }
 
-  async updateUserProfile(userData: Partial<User>): Promise<User> {
+  async updateUserPreference(userData: Partial<User>): Promise<User> {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('No token found');

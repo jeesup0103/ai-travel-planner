@@ -16,7 +16,7 @@ import { authService } from '../services/authService';
 const Profile: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [newPreference, setNewPreference] = useState('');
-  const [preferences, setPreferences] = useState(user?.preferences?.travelPreferences || []);
+  const [preferences, setPreferences] = useState(user?.travelPreferences || []);
 
   const handleAddPreference = () => {
     if (!newPreference.trim()) return;
@@ -41,11 +41,8 @@ const Profile: React.FC = () => {
 
   const handleSavePreferences = async (updatedPreferences: string[]) => {
     try {
-      const updatedUser = await authService.updateUserProfile({
-        preferences: {
-          ...user?.preferences,
-          travelPreferences: updatedPreferences,
-        },
+      const updatedUser = await authService.updateUserPreference({
+        travelPreferences: updatedPreferences,
       });
       updateUser(updatedUser);
     } catch (error) {
