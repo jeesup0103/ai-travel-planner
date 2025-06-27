@@ -23,7 +23,7 @@ import {
   Button,
 } from '@mui/material';
 import { Send as SendIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
+import {APIProvider, Map, MapCameraChangedEvent} from '@vis.gl/react-google-maps';
 import { ChatSession, Message, Location } from '../types/chat';
 
 const drawerWidth = 300;
@@ -40,10 +40,10 @@ const Chat: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mapValid = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+  // const { isLoaded } = useLoadScript({
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
-  });
+  // });
 
   const { chatId } = useParams<{ chatId: string }>();
 
@@ -287,14 +287,23 @@ const Chat: React.FC = () => {
       </Paper>
 
       <Paper sx={{ flex: 1 }}>
-        {!isLoaded
+        {/* {!isLoaded
           ? <CircularProgress/>
           : <GoogleMap mapContainerStyle={{ width: '100%', height: '100%' }} center={mapCenter} zoom={13}>
               {locations.map((loc, i) => (
                 <Marker key={i} position={loc} title={loc.name}/>
               ))}
             </GoogleMap>
-        }
+        } */}
+        <APIProvider apiKey={mapValid} onLoad={() => console.log('Maps API has loaded. ')}>
+          <Map
+              defaultZoom={13}
+              defaultCenter={ mapCenter }
+              onCameraChanged={ (ev: MapCameraChangedEvent) =>
+                console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
+              }>
+          </Map>
+        </APIProvider>
       </Paper>
 
       <Dialog open={deleteDialogOpen} onClose={handleCancelDelete}>
