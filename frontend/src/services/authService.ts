@@ -51,8 +51,6 @@ class AuthService {
           'Content-Type': 'application/json'
         }
       });
-
-      console.log('Current user response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Get current user error:', {
