@@ -2,11 +2,11 @@ import os
 import googlemaps
 from typing import List, Optional
 from ..models.travel import Place, Route
-
+from ..core.config import settings
 
 class MapsService:
     def __init__(self):
-        api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+        api_key = settings.GOOGLE_MAPS_API_KEY
         if not api_key:
             raise ValueError("GOOGLE_MAPS_API_KEY required")
         self.gmaps = googlemaps.Client(key=api_key)
