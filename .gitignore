@@ -33,3 +33,4 @@ backend/target/
 docker-compose.override.ymlproject.md
 
 project.md
+__pycache__
