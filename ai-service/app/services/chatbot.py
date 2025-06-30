@@ -12,7 +12,7 @@ class TravelChatbot:
         if not api_key:
             raise ValueError("OPENAI_API_KEY required")
 
-        self.llm = ChatOpenAI(model="gpt-4.1-nano", temperature=0.7)
+        self.llm = ChatOpenAI(model="gpt-4.1-nano", api_key = api_key, temperature=0.7)
         self.maps = MapsService()
 
         # Create chain with structured output
