@@ -23,8 +23,8 @@ import {
   Button,
 } from '@mui/material';
 import { Send as SendIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import {APIProvider, Map, MapCameraChangedEvent} from '@vis.gl/react-google-maps';
-import { ChatSession, Message, Location } from '../types/chat';
+import { APIProvider, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
+import { ChatSession, Message, Location, ChatResponse } from '../types/chat';
 
 const drawerWidth = 300;
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
@@ -160,6 +160,7 @@ const Chat: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || !chatId) return;
     const text = input.trim();
+
     const userMsg: Message = {
       id: Date.now().toString(),
       chatSessionId: Number(chatId),
@@ -172,20 +173,25 @@ const Chat: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post<{ response: string }>(`${API_URL}/chat/message`, {
-        chatSessionId: Number(chatId),
-        text,
-      });
+      const res = await axios.post<ChatResponse>(
+        `${API_URL}/chat/message`,
+        { chatSessionId: Number(chatId), text }
+      );
+
+      const { summaryResponse } = res.data.recommendation;
+      console.log("Summary Response : ", summaryResponse);
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         chatSessionId: Number(chatId),
-        text: res.data.response,
+        text: summaryResponse,
         sender: 'ai',
         timestamp: new Date(),
       };
       setMessages(ms => [...ms, aiMsg]);
-      // if backend ever returns locations:
-      // setLocations(res.data.locations || []);
+      // TODO
+      // setRoutes(routes);
+      // setPlaces(places);
+      // setTips(tips);
     } catch (err) {
       console.error('AI request failed', err);
     } finally {

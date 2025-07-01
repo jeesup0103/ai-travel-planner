@@ -18,3 +18,26 @@ export interface Message {
     lng: number;
     name: string;
   }
+
+  export interface Route {
+    origin: string;
+    destination: string;
+    distance: string;
+    duration:string;
+    mode: string;
+  }
+  export interface Place  {
+    name: string;
+    address: string;
+    rating: number;
+  }
+  export interface Recommendation {
+    query: string;
+    routes: Route[];
+    places: Place[];
+    tips: string[];
+    summaryResponse: string;
+  }
+  export interface ChatResponse {
+    recommendation: Recommendation;
+  }
