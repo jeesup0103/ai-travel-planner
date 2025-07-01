@@ -5,10 +5,12 @@ import com.travelplanner.model.Message;
 import com.travelplanner.model.User;
 import com.travelplanner.repository.ChatRepository;
 import com.travelplanner.repository.MessageRepository;
+import com.travelplanner.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -20,6 +22,7 @@ public class ChatController {
 
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
+    private final WebClient aiServiceClient;
 
     @GetMapping("/chats")
     public ResponseEntity<?> getChatSessions(@AuthenticationPrincipal User user) {
@@ -67,19 +70,32 @@ public class ChatController {
 
     @PostMapping("/chat/message")
     public ResponseEntity<?> sendMessage(@RequestBody Message body, @AuthenticationPrincipal User user) {
-
         ChatSession session = chatRepository.findById(body.getChatSessionId()).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied.");
         }
 
+        // Save user message
         messageRepository.save(body.getChatSessionId(), "user", body.getText());
 
-        // TODO
-        String aiResponse = "This is a mock AI response to: " + body.getText();
-        messageRepository.save(body.getChatSessionId(), "ai", aiResponse);
+        // Call aiServiceClient
+        LangChainRequest req = new LangChainRequest();
+        req.setMessage(body.getText());
 
-        return ResponseEntity.ok(new MessageResponse(aiResponse));
+        ChatResponse ai = aiServiceClient.post()
+            .uri("/message")
+            .bodyValue(req)
+            .retrieve()
+            .bodyToMono(ChatResponse.class)
+            .block();
+
+        // Save AI reply
+        messageRepository.save(
+            body.getChatSessionId(),
+            "ai",
+            ai != null ? ai.getRecommendation().getSummaryResponse() : null);
+
+        return ResponseEntity.ok(ai);
     }
 
     static class MessageResponse {
