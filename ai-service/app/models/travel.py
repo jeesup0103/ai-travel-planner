@@ -24,3 +24,4 @@ class TravelRecommendation(BaseModel):
     routes: List[Route] = Field(..., description="Recommended routes")
     places: List[Place] = Field(default_factory=list, description="Recommended places")
     tips: List[str] = Field(default_factory=list, description="Travel tips")
+    summaryResponse: str = Field(..., description="Summarized response about routes and places and tips.")

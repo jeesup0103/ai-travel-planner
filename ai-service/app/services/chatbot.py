@@ -22,7 +22,8 @@ class TravelChatbot:
                             1. Extract locations and preferences from their message
                             2. Suggest routes between locations
                             3. Recommend interesting places to visit
-                            4. Provide helpful travel tips
+                            4. Provide helpful travel
+                            5. Make a summarized string response of the travel suggestions
                             Always respond with structured travel recommendations."""),
                 ("human", "{message}")
             ])
@@ -52,5 +53,6 @@ class TravelChatbot:
             return TravelRecommendation(
                 query=message,
                 routes=[],
-                tips=["Sorry, I encountered an error. Please try again."]
+                tips=["Sorry, I encountered an error. Please try again."],
+                summaryResponse=[]
             )

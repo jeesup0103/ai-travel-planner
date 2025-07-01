@@ -12,4 +12,5 @@ public class Recommendation {
     private List<Route> routes;
     private List<Places> places;
     private List<String> tips;
+    private String summaryResponse;
 }
