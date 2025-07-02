@@ -272,6 +272,13 @@ const Chat: React.FC = () => {
                 </Typography>
               </ListItem>
             ))}
+            {loading && (
+              <ListItem key="loading" sx={{ flexDirection: 'column', alignItems: 'flex-start' }} >
+                <Paper sx={{ p: 2, maxWidth: '80%', bgcolor: 'grey.100' }}>
+                  <CircularProgress size={20}/>
+                </Paper>
+              </ListItem>
+            )}
             <div ref={messagesEndRef}/>
           </List>
         </Box>
