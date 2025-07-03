@@ -300,14 +300,6 @@ const Chat: React.FC = () => {
       </Paper>
 
       <Paper sx={{ flex: 1 }}>
-        {/* {!isLoaded
-          ? <CircularProgress/>
-          : <GoogleMap mapContainerStyle={{ width: '100%', height: '100%' }} center={mapCenter} zoom={13}>
-              {locations.map((loc, i) => (
-                <Marker key={i} position={loc} title={loc.name}/>
-              ))}
-            </GoogleMap>
-        } */}
         <APIProvider apiKey={mapValid} onLoad={() => console.log('Maps API has loaded. ')}>
           <Map
               defaultZoom={13}
