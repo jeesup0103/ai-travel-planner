@@ -81,6 +81,7 @@ public class ChatController {
         // Call aiServiceClient
         LangChainRequest req = new LangChainRequest();
         req.setMessage(body.getText());
+        req.setPreferences(user.getTravelPreferences());
 
         ChatResponse ai = aiServiceClient.post()
             .uri("/message")
@@ -93,7 +94,8 @@ public class ChatController {
         messageRepository.save(
             body.getChatSessionId(),
             "ai",
-            ai != null ? ai.getRecommendation().getSummaryResponse() : null);
+            ai != null ? ai.getRecommendation().getSummaryResponse() : null
+        );
 
         return ResponseEntity.ok(ai);
     }

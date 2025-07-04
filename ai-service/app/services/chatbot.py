@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from ..models.travel import TravelRecommendation
 from .maps_service import MapsService
 from ..core.config import settings
-
+from typing import List
 
 class TravelChatbot:
     def __init__(self):
@@ -25,14 +25,17 @@ class TravelChatbot:
                             4. Provide helpful travel
                             5. Make a summarized string response of the travel suggestions
                             Always respond with structured travel recommendations."""),
-                ("human", "{message}")
+                ("human", """
+                 Message: {message}
+                 Preferences: {preferences}
+                 """)
             ])
             | self.llm.with_structured_output(TravelRecommendation)
         )
 
-    async def chat(self, message: str) -> TravelRecommendation:
+    async def chat(self, message: str, preferences: List[str]) -> TravelRecommendation:
         try:
-            response = await self.chain.ainvoke({"message": message})
+            response = await self.chain.ainvoke({"message": message, "preferences": preferences})
 
             enhanced_routes = []
             for route in response.routes:

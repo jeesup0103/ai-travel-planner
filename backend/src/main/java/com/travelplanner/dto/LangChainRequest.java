@@ -7,4 +7,5 @@ import lombok.Setter;
 @Setter
 public class LangChainRequest {
     private String message;
+    private List<String> preferences;
 }
