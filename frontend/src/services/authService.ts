@@ -15,9 +15,6 @@ interface LoginResponse {
 class AuthService {
   async login(googleToken: string): Promise<LoginResponse> {
     try {
-      console.log('Attempting login with token:', googleToken.substring(0, 10) + '...');
-      console.log('API URL:', API_URL);
-
       const response = await axios.post(`${API_URL}/auth/google`, { token: googleToken });
 
       if (!response.data.token) {
@@ -39,8 +36,6 @@ class AuthService {
   async getCurrentUser(): Promise<User> {
     try {
       const token = localStorage.getItem('token');
-      console.log('Getting current user with token:', token ? 'present' : 'missing');
-
       if (!token) {
         throw new Error('No token found');
       }
@@ -83,7 +78,6 @@ class AuthService {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers!['Authorization'] = `Bearer ${token}`;
-        console.log('Added token to request headers');
       }
       return config;
     });
