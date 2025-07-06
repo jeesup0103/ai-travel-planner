@@ -2,6 +2,7 @@ package com.travelplanner.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Getter
 @Setter
