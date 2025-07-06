@@ -7,6 +7,8 @@ class Place(BaseModel):
     name: str = Field(..., description="Name of the place")
     address: str = Field(..., description="Address of the place")
     rating: Optional[float] = Field(None, description="Rating (0-5)")
+    lat: Optional[float] = Field(None, description="Latitude coordinate")
+    lng: Optional[float] = Field(None, description="Longitude coordinate")
 
 
 class Route(BaseModel):

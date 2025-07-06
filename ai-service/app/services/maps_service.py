@@ -31,7 +31,9 @@ class MapsService:
                 Place(
                     name=place.get('name', ''),
                     address=place.get('formatted_address', ''),
-                    rating=place.get('rating')
+                    rating=place.get('rating'),
+                    lat=place.get('geometry', {}).get('location', {}).get('lat'),
+                    lng=place.get('geometry', {}).get('location', {}).get('lng')
                 )
                 for place in places.get('results', [])[:5]
             ]

@@ -30,6 +30,12 @@ export interface Message {
     name: string;
     address: string;
     rating: number;
+    lat?: number;
+    lng?: number;
+  }
+  export interface LatLng {
+    lat: number;
+    lng: number;
   }
   export interface Recommendation {
     query: string;
