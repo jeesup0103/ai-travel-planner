@@ -23,8 +23,8 @@ import {
   Button,
 } from '@mui/material';
 import { Send as SendIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import { APIProvider, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
-import { ChatSession, Message, Location, ChatResponse } from '../types/chat';
+import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+import { ChatSession, Message, ChatResponse, Place, LatLng } from '../types/chat';
 
 const drawerWidth = 300;
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
@@ -36,11 +36,15 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [locations] = useState<Location[]>([]);
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [mapCenter, setMapCenter] = useState<LatLng>({ lat: 37.5665, lng: 126.9780 });
+  const [recentPlaceUpdate, setRecentPlaceUpdate] = useState(false);
+  // const [setRoutes] = useState<Route[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mapValid = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+  const mapId = process.env.REACT_APP_GOOGLE_MAPID || '';
   // const { isLoaded } = useLoadScript({
 
   // });
@@ -110,6 +114,14 @@ const Chat: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // whenever places updates, recenter on the first one
+  useEffect(() => {
+    if (places.length > 0 && places[0].lat != null && places[0].lng != null) {
+      setMapCenter({ lat: places[0].lat, lng: places[0].lng });
+      setRecentPlaceUpdate(true);
+    }
+  }, [places]);
+
   // Select a chat and fetch its messages
   const handleChatSelect = (chatId: string) => {
     navigate(`/chat/${chatId}`);
@@ -178,8 +190,18 @@ const Chat: React.FC = () => {
         { chatSessionId: Number(chatId), text }
       );
 
-      const { summaryResponse } = res.data.recommendation;
+      const { summaryResponse, places: newPlaces } = res.data.recommendation;
       console.log("Summary Response : ", summaryResponse);
+      console.log("Places received:", newPlaces);
+      if (newPlaces && newPlaces.length > 0) {
+        console.log("First place details:", {
+          name: newPlaces[0].name,
+          address: newPlaces[0].address,
+          lat: newPlaces[0].lat,
+          lng: newPlaces[0].lng,
+          rating: newPlaces[0].rating
+        });
+      }
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         chatSessionId: Number(chatId),
@@ -188,10 +210,17 @@ const Chat: React.FC = () => {
         timestamp: new Date(),
       };
       setMessages(ms => [...ms, aiMsg]);
-      // TODO
-      // setRoutes(routes);
-      // setPlaces(places);
-      // setTips(tips);
+      setPlaces(newPlaces || []);
+      // setRoutes(newRoutes || []);
+
+      // Move camera to first place if available
+      if (newPlaces && newPlaces.length > 0 && newPlaces[0].lat && newPlaces[0].lng) {
+        const firstPlace = newPlaces[0];
+        const map = document.querySelector('gmp-map') as any;
+        if (map) {
+          map.panTo({ lat: firstPlace.lat, lng: firstPlace.lng });
+        }
+      }
     } catch (err) {
       console.error('AI request failed', err);
     } finally {
@@ -204,10 +233,6 @@ const Chat: React.FC = () => {
       handleSend();
     }
   };
-
-  const mapCenter = locations.length
-    ? locations[0]
-    : { lat: 37.5665, lng: 126.9780 };
 
   return (
     <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)' }}>
@@ -302,11 +327,30 @@ const Chat: React.FC = () => {
       <Paper sx={{ flex: 1 }}>
         <APIProvider apiKey={mapValid} onLoad={() => console.log('Maps API has loaded. ')}>
           <Map
-              defaultZoom={13}
-              defaultCenter={ mapCenter }
-              onCameraChanged={ (ev: MapCameraChangedEvent) =>
-                console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
-              }>
+            defaultZoom={13}
+            defaultCenter={ mapCenter }
+            center={ recentPlaceUpdate ? mapCenter : undefined }
+            mapId={ mapId }
+            onCameraChanged={ev => {
+              setRecentPlaceUpdate(false);
+              console.log('camera moved:', ev.detail.center);
+            }}>
+
+            {places.map((place, index) => (
+              <AdvancedMarker
+                key={`place-${index}`}
+                position={{
+                  lat: place.lat || mapCenter.lat,
+                  lng: place.lng || mapCenter.lng
+                }}
+                title={place.name}
+                onClick={() => {
+                  console.log('Clicked place:', place.name, 'Address:', place.address, 'Rating:', place.rating);
+                }}
+              >
+                <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+              </AdvancedMarker>
+            ))}
           </Map>
         </APIProvider>
       </Paper>
