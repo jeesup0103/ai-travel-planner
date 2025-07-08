@@ -25,3 +25,12 @@ CREATE TABLE IF NOT EXISTS messages (
     sender VARCHAR(10),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS ai_recommendations (
+  message_id BIGINT PRIMARY KEY REFERENCES messages(id)      ON DELETE CASCADE,
+  query TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  routes JSONB NOT NULL,   -- e.g. [ {origin:…,destination:…,mode:…}, … ]
+  places JSONB NOT NULL,   -- e.g. [ {name:…,address:…,rating:…,lat:…,lng:…}, … ]
+  tips JSONB NOT NULL    -- e.g. [ “Book ahead…”, “Try the local fare”, … ]
+);
