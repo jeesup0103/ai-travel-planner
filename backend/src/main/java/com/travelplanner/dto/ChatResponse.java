@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChatResponse {
-    private Recommendation recommendation;
+    private AiRecommendation aiRecommendation;
 }

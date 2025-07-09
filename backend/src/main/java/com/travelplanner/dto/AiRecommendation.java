@@ -7,7 +7,8 @@ import java.util.List;
 
 @Getter
 @Setter
-public class Recommendation {
+public class AiRecommendation {
+    private Long    messageId;
     private String query;
     private List<Route> routes;
     private List<Places> places;

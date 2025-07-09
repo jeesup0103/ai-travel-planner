@@ -94,7 +94,7 @@ public class ChatController {
         messageRepository.save(
             body.getChatSessionId(),
             "ai",
-            ai != null ? ai.getRecommendation().getSummaryResponse() : null
+            ai != null ? ai.getAiRecommendation().getSummaryResponse() : null
         );
 
         return ResponseEntity.ok(ai);
