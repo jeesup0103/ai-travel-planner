@@ -3,11 +3,15 @@ package com.travelplanner.repository;
 import com.travelplanner.model.Message;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class MessageRepository {
@@ -28,9 +32,20 @@ public class MessageRepository {
         return message;
     };
 
-    public void save(Long chatSessionId, String sender, String text) {
-        String sql = "INSERT INTO messages (chat_session_id, text, sender, timestamp) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.update(sql, chatSessionId, text, sender, new Timestamp(new Date().getTime()));
+    public Long save(Long chatSessionId, String sender, String text) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(conn -> {
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO messages (chat_session_id, text, sender, timestamp) VALUES (?, ?, ?, ?)",
+                    new String[]{"id"}             // return the auto-generated “id” column
+            );
+            ps.setLong(1, chatSessionId);
+            ps.setString(2, text);
+            ps.setString(3, sender);
+            ps.setTimestamp(4, new Timestamp(new Date().getTime()));
+            return ps;
+        }, keyHolder);
+        return Objects.requireNonNull(keyHolder.getKey()).longValue();
     }
 
     public List<Message> findByChatSessionId(Long chatSessionId) {

@@ -1,10 +1,12 @@
 package com.travelplanner.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.travelplanner.model.ChatSession;
 import com.travelplanner.model.Message;
 import com.travelplanner.model.User;
 import com.travelplanner.repository.ChatRepository;
 import com.travelplanner.repository.MessageRepository;
+import com.travelplanner.repository.AiRecommendationRepository;
 import com.travelplanner.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ public class ChatController {
 
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
+    private final AiRecommendationRepository aiRecommendationRepository;
     private final WebClient aiServiceClient;
 
     @GetMapping("/chats")
@@ -69,7 +72,7 @@ public class ChatController {
     }
 
     @PostMapping("/chat/message")
-    public ResponseEntity<?> sendMessage(@RequestBody Message body, @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> sendMessage(@RequestBody Message body, @AuthenticationPrincipal User user) throws JsonProcessingException {
         ChatSession session = chatRepository.findById(body.getChatSessionId()).orElse(null);
         if (session == null || !session.getUserId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied.");
@@ -90,12 +93,24 @@ public class ChatController {
             .bodyToMono(ChatResponse.class)
             .block();
 
-        // Save AI reply
-        messageRepository.save(
+        // Save AI summary to messageRepo
+        Long aiMsgId = messageRepository.save(
             body.getChatSessionId(),
             "ai",
             ai != null ? ai.getAiRecommendation().getSummaryResponse() : null
         );
+
+        // Save AI response to recommendationRepo
+        AiRecommendation rec = new AiRecommendation();
+        rec.setMessageId(aiMsgId);
+        assert ai != null;
+        rec.setQuery   ( ai.getAiRecommendation().getQuery() );
+        rec.setSummaryResponse ( ai.getAiRecommendation().getSummaryResponse() );
+        rec.setRoutes  ( ai.getAiRecommendation().getRoutes() );
+        rec.setPlaces  ( ai.getAiRecommendation().getPlaces() );
+        rec.setTips    ( ai.getAiRecommendation().getTips() );
+
+        aiRecommendationRepository.save(rec);
 
         return ResponseEntity.ok(ai);
     }
