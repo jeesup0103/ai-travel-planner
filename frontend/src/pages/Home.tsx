@@ -18,19 +18,19 @@ const Home: React.FC = () => {
     {
       title: 'AI-Powered Travel Recommendation',
       description: 'Get personalized travel recommendations using advanced AI technology',
-      image: '/images/chat.jpg',
+      image: '/images/ai-powered.png',
       requiresAuth: false
     },
     {
       title: 'Interactive Maps',
       description: 'Visualize your travel destinations with integrated Google Maps',
-      image: '/images/maps.jpg',
+      image: '/images/maps.png',
       requiresAuth: false
     },
     {
       title: 'Chat-based interface',
       description: 'Chat your way to personalized place suggestions',
-      image: '/images/recommendations.jpg',
+      image: '/images/chats.png',
       requiresAuth: false
     },
   ];
@@ -76,7 +76,7 @@ const Home: React.FC = () => {
           <Card key={feature.title} sx={{ borderRadius: 10, overflow: 'hidden' }}>
             <CardMedia
               component="img"
-              height="180"
+              height="400"
               image={feature.image}
               alt={feature.title}
               sx={{ objectFit: 'cover' }}
