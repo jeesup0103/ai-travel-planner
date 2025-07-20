@@ -14,24 +14,25 @@ services:
   #   environment:
   #     SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/travel
   #     SPRING_DATASOURCE_USERNAME: postgres
-  #     SPRING_DATASOURCE_PASSWORD: example
+  #     SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
   #   depends_on:
   #     - db
   #     - ai-service
 
-  # ai-service:
-  #   build: ./ai-service/app
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     OPENAI_API_KEY: ${OPENAI_API_KEY}
+  ai-service:
+    build: ./ai-service/app
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
 
   # db:
   #   image: postgres:14-alpine
   #   environment:
   #     POSTGRES_DB: travel
   #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: example
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
   #   volumes:
   #     - db_data:/var/lib/postgresql/data
 
