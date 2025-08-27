@@ -29,3 +29,10 @@ ai-travel-planner/
 ├── ai-service/        # FastAPI 백엔드 (AI 추천)
 └── README.md          # 프로젝트 설명
 ```
+## How to start
+- frontend
+  - "npm start"
+- backend
+  - "intellij"
+- ai-service
+  - "uvicorn app.main:app --reload"
